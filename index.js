@@ -16,15 +16,24 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.send('Socket.IO Server is running.');
+    res.send('Socket.IO Server is running with Redis adapter.');
 });
 
+// const { createClient } = require("redis");
+const { createAdapter } = require("@socket.io/redis-adapter");
+const Redis = require('ioredis');
+// const pubClient = createClient({ url: "redis://localhost:6379" });
+const pubClient = new Redis({ url: "redis://localhost:6379" });
+const subClient = pubClient.duplicate();
+
+io.adapter(createAdapter(pubClient, subClient));
 // Socket.io connection
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
     // Join a specific channel
     socket.on('join_channel', ({ channelId }) => {
+        console.log(`User ??`);
         socket.join(channelId);
         console.log(`User ${socket.id} joined channel ${channelId}`);
         io.to(channelId).emit('channel_message', {
